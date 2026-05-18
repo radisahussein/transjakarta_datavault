@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: stg_transactions
+    description: >
+      Cleaned TransJakarta tap-in/tap-out records. Filters null corridorID rows (~6,980).
+      Retains incomplete trips (has_tap_out=false) for ridership counting.
+      payAmount may be null for free/transfer trips.
+
+    columns:
+      - name: transaction_id
+        description: "Original transID — unique per transaction"
+        tests:
+          - not_null
+          - unique
+
+      - name: card_bank
+        description: "Lowercased card-issuing bank"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['dki', 'emoney', 'brizzi', 'bni', 'online', 'flazz']
+
+      - name: card_sex
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['F', 'M']
+
+      - name: birth_year
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1920
+              max_value: 2020
+
+      - name: age_years
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 3
+              max_value: 103
+
+      - name: corridor_id
+        tests:
+          - not_null
+
+      - name: direction
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+      - name: tap_in_stop_id
+        tests:
+          - not_null
+
+      - name: tap_in_time
+        tests:
+          - not_null
+
+      - name: pay_amount
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 20000
+              row_condition: "pay_amount IS NOT NULL"
+
+      - name: has_tap_out
+        tests:
+          - not_null

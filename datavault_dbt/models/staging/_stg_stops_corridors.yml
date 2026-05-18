@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: stg_stops
+    description: "Unique tap-in bus stops with lat/lon coordinates"
+    columns:
+      - name: stop_id
+        tests:
+          - not_null
+          - unique
+      - name: stop_name
+        tests:
+          - not_null
+      - name: lat
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: -8.0
+              max_value: -5.0
+      - name: lon
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 106.0
+              max_value: 107.5
+
+  - name: stg_corridors
+    description: "Unique TransJakarta corridors"
+    columns:
+      - name: corridor_id
+        tests:
+          - not_null
+          - unique
+      - name: corridor_name
+        tests:
+          - not_null
