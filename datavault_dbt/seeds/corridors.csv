@@ -1,0 +1,222 @@
+corridor_id,corridor_name
+1,Blok M - Kota
+10,Tanjung Priok - PGC 2
+10A,Rusun Marunda - Tanjung Priok
+10B,Rusun Cipinang Besar Selatan - Penas Kalimalang
+10D,Kampung Rambutan - Tanjung Priok
+10H,Tanjung Priok - Blok M
+10K,Tanjung Priok - Senen via Taman BMW
+11,Pulo Gebang - Matraman
+11B,Rusun Rawa Bebek - Penggilingan
+11C,Rusun Pinus Elok - Rusun Pulo Gebang
+11D,Pulo Gebang - Pulo Gadung 2 via PIK
+11K,Rusun Komarudin - Penggilingan
+11M,Rusun Rawa Bebek - Bukit Duri
+11N,Rusun Cipinang Muara - Jatinegara
+11P,Rusun Pondok Bambu - Walikota Jakarta Timur
+11Q,Kampung Melayu - Pulo Gebang via BKT
+12,Tanjung Priok - Pluit
+12A,Pelabuhan Kaliadem - Kota
+12B,Pluit - Senen
+12C,Rusun Waduk Pluit - Penjaringan
+12F,Rusun Marunda - Rusun Waduk Pluit
+12H,Rusun Penjaringan - Penjaringan
+12P,St. LRT Pegangsaan Dua - JIS
+13,Ciledug - Tendean
+13B,Puri Beta - Pancoran Barat
+13C,Puri Beta - Dukuh Atas
+13D,Puri Beta - Ragunan
+14,Jakarta International Stadium - Senen
+1A,Pantai Maju - Balai Kota
+1B,Stasiun Palmerah - Tosari
+1C,Pesanggrahan - Blok M
+1E,Pondok Labu - Blok M
+1F,Stasiun Palmerah - Bundaran Senayan
+1H,Tanah Abang - Stasiun Gondangdia
+1K,Cibubur Junction - Blok M
+1M,Meruya - Blok M
+1N,Tanah Abang - Blok M
+1P,Senen - Blok M
+1Q,Rempoa - Blok M
+1R,Senen - Tanah Abang
+1T,Cibubur - Balai Kota
+2,Pulo Gadung - Monas
+2A,Pulo Gadung - Rawa Buaya via Balai Kota
+2B,Harapan Indah - ASMI
+2E,Rusun Rawa Bebek - Kodamar
+2F,Rusun Cakung Barat - Pulo Gadung
+2H,Rusun Jati Rawasari - Senen
+2P,Gondangdia - Senen
+2Q,Gondangdia - Balai Kota
+3,Kalideres - Bundaran HI via Veteran
+3A,Rusun Pesakih - Kalideres
+3B,Rusun Flamboyan - Cengkareng
+3C,Rusun Kapuk Muara - Penjaringan
+3E,Puri Kembangan - Sentraland Cengkareng
+3F,Kalideres - Gelora Bung Karno
+3H,Jelambar - Kota
+4,Pulo Gadung 2 - Tosari
+4B,Stasiun Manggarai - UI
+4C,TU Gas - Bundaran Senayan
+4D,Pulo Gadung 2 - Kuningan
+4E,Rusun Jatinegara Kaum - Pulo Gadung
+4F,Pinang Ranti - Pulo Gadung
+5,Matraman Baru - Ancol
+5B,Stasiun Tebet - BNN
+5C,PGC - Juanda
+5D,PGC 1 - Ancol
+5F,Kampung Melayu - Tanah Abang
+5M,Kampung Melayu - Tanah Abang via Cikini
+5N,Kampung Melayu - Ragunan
+6,Ragunan - Dukuh Atas 2
+6A,Ragunan - MH Thamrin via Kuningan
+6B,Ragunan - MH Thamrin via Semanggi
+6C,Stasiun Tebet - Karet via Patra Kuningan
+6D,Stasiun Tebet - Karet via Underpass
+6H,Senen - Lebak Bulus
+6M,Stasiun Manggarai - Blok M
+6N,Ragunan - Blok M via Kemang
+6P,Cibubur - Kuningan
+6Q,Dukuh Atas - Casablanca via Epicentrum Raya
+6T,Pasar Minggu - Velbak
+6U,Blok M - Pasar Minggu
+6V,Ragunan - Gelora Bung Karno
+7,Kampung Rambutan - Bidara Cina
+7A,Kampung Rambutan - Lebak Bulus
+7B,Kampung Rambutan - Blok M
+7C,Cibubur - BKN
+7D,Pancoran - Kampung Rambutan
+7E,Kampung Rambutan - Ragunan
+7F,Kampung Rambutan - Juanda via Pasar Baru
+7P,Pondok Kelapa - BKN
+7Q,Blok M - PGC
+8,Lebak Bulus - Pasar Baru via Tomang
+8A,Jelambar - Juanda
+8C,Kebayoran Lama - Tanah Abang
+8D,Joglo - Blok M
+8E,Bintaro - Blok M
+8K,Batusari - Grogol
+8M,S. Parman - Tanah Abang
+9,Pinang Ranti - Pluit
+9A,PGC 2 - Grogol 2
+9C,Pinang Ranti - Bundaran Senayan
+9D,Pasar Minggu - Tanah Abang
+9E,Kebayoran Lama - Jelambar
+9F,Rusun Tambora - Pluit
+9H,Blok M - Universitas Indonesia
+9N,Pinang Ranti - Pramuka
+B11,Summarecon Bekasi - BNN
+B13,Bekasi Barat - Blok M
+B14,Bekasi Barat - Kuningan
+B21,Bekasi Timur - Cawang
+BW9,Monas - Pantai Indah Kapuk
+D11,Depok - BKN
+D21,Universitas Indonesia - Lebak Bulus
+D31,Cinere - Kuningan
+D32,Cinere - Bundaran Senayan
+JAK.01,Tanjung Priok - Plumpang
+JAK.02,Kampung Melayu - Duren Sawit
+JAK.03,Lebak Bulus - Andara
+JAK.04,Grogol - Tubagus Angke
+JAK.05,Semper - Rorotan
+JAK.06,Kampung Rambutan - Pondok Gede
+JAK.07,Tanah Abang - Grogol via Tawakal
+JAK.08,Roxy - Benhil
+JAK.10,Tanah Abang - Kota
+JAK.106,Terminal Kampung Melayu - Terminal Klender
+JAK.11,Tanah Abang - Kebayoran Lama
+JAK.110A,Rusun Marunda - Terminal Terpadu Pulo Gebang
+JAK.112,Terminal Tanah Merah - Pulo Gadung
+JAK.113,Rusun Sindang Koja - Kp. Sawah
+JAK.115,Term. Tj. Priok - Pegangsaan II IGI
+JAK.117,Tanjung Priok - Tanah Merdeka
+JAK.118,Taman Waduk Papanggo - Kota Tua
+JAK.12,Tanah Abang - Kebayoran Lama via Pos Pengumben
+JAK.120,JIS - Terminal Muara Angke
+JAK.13,Tanah Abang - Jembatan Lima
+JAK.14,Tanah Abang - Meruya
+JAK.15,Bulak Turi - Tanjung Priok
+JAK.16,Cililitan - Condet
+JAK.17,Senen - Pulo Gadung
+JAK.18,Kalibata - Kuningan
+JAK.19,Pinang Ranti - Kampung Rambutan
+JAK.20,Cawang UKI - Lubang Buaya
+JAK.21,Cililitan - Dwikora
+JAK.22,Dwikora - Penas Kalimalang
+JAK.23,Senen - Pisangan Baru
+JAK.24,Senen - Pulo Gadung via Kelapa Gading
+JAK.25,Kp. Rambutan - Kalisari
+JAK.26,Rawamangun - Duren Sawit
+JAK.27,Pulo Gebang - Rorotan
+JAK.28,Kp. Rambutan - Taman Wiladatika
+JAK.29,Tanjung Priok - Sukapura
+JAK.30,Grogol - Meruya via Roxy
+JAK.31,Blok M - Andara
+JAK.32,Lebak Bulus - Petukangan
+JAK.33,Pulo Gadung - Kota
+JAK.34,Rawamangun - Klender
+JAK.35,Pangkalan Jati - Rawamangun
+JAK.36,Cilangkap - Cililitan
+JAK.37,Cililitan - Condet via Kayu Manis
+JAK.38,Bulak Ringin - Kampung Rambutan
+JAK.39,Kalimalang - Duren Sawit
+JAK.40,Harapan Baru - Pulo Gebang via Rawa Kuning
+JAK.41,Kampung Melayu - Pulo Gadung
+JAK.42,Kampung Melayu - Pondok Kelapa
+JAK.43B,Tongtek - Tebet Eco Park (TEP) - Cililitan
+JAK.43C,Sarana Jaya - Tebet Eco Park (TEP) - Stasiun Cawang
+JAK.44,Andara - Stasiun Universitas Pancasila
+JAK.45,Lebak Bulus - Ragunan
+JAK.46,Pasar Minggu - Jagakarsa
+JAK.47,Pasar Minggu - Ciganjur via KB Ragunan
+JAK.48A,Stasiun Tebet - Rusun Karet Tengsin
+JAK.48B,Stasiun Tebet - Kampung Melayu
+JAK.49,Lebak Bulus - Cipulir
+JAK.50,Kalideres - Puri Kembangan
+JAK.51,Taman Kota - Budi Luhur
+JAK.52,Terminal Kalideres - Terminal Muara Angke
+JAK.53,Grogol - Pos Pengumben via Slipi
+JAK.54,Grogol - Benhil
+JAK.56,Grogol - Srengseng
+JAK.58,Cilincing - Rorotan
+JAK.59,Rawamangun - Tanah Merah
+JAK.60,Kelapa Gading - Rusun Kemayoran
+JAK.61,Cempaka Putih - Pulo Gadung via Kelapa Gading
+JAK.64,Lenteng Agung - Aseli
+JAK.71,Kampung Rambutan - Pinang Ranti
+JAK.72,Kampung Rambutan - Pasar Rebo via Poncol
+JAK.73,Jambore Cibubur - Pasar Rebo
+JAK.74,Terminal Rawamangun - Cipinang Muara
+JAK.75,Cililitan - Kp. Pulo
+JAK.77,Tanjung Priok - Jembatan Item
+JAK.80,Rawa Buaya - Rawa Kompeni
+JAK.84,Terminal Kampung Melayu - Kapin Raya
+JAK.85,Bintara - Cipinang Indah
+JAK.86,Term. Rawamangun - Term. Manggarai
+JAK.88,Terminal Tanjung Priok - Ancol Barat
+JAK.99,Term. Pulo Gadung - Lampiri
+JIS3,Harmoni - Jakarta International Stadium
+L13E,Puri Beta - Kuningan (Express)
+M1,Blok M - Kota
+M10,PGC 2 - Tanjung Priok
+M11,Pulo Gebang - Pulo Gadung 2
+M12,Sunter Boulevard Barat - Penjaringan
+M13,Puri Beta 2 - Tendean
+M1H,Tanah Abang - St. Gondangdia
+M2,Pulo Gadung - Monas
+M3,Kalideres - Bundaran HI via Veteran
+M4,Pulo Gadung 2 - Dukuh Atas 2
+M5,Matraman Baru - Ancol
+M6,Ragunan - MH Thamrin
+M7,Kampung Rambutan - Monas
+M7B,BKN - Blok M
+M8,Lebak Bulus - Pasar Baru
+M9,Pinang Ranti - Pluit
+R1A,Pantai Maju - Kota
+S11,BSD - Jelambar
+S12,BSD Serpong - Fatmawati
+S21,Ciputat - CSW
+S22,Ciputat - Kampung Rambutan
+S31,Bintaro - Fatmawati
+T11,Poris Plawad - Bundaran Senayan
+T21,Palem Semi - Bundaran Senayan
