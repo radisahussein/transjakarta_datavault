@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: int_trips_enriched
+    description: >
+      Enriched transaction records with derived temporal features, Haversine distance,
+      and trip duration. Inherits all rows from stg_transactions (~182,520).
+      is_complete_trip requires has_tap_out=true and non-null geo on both ends.
+
+    columns:
+      - name: transaction_id
+        tests:
+          - not_null
+          - unique
+
+      - name: hour_of_day
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 23
+
+      - name: day_of_week
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 7
+
+      - name: trip_date
+        tests:
+          - not_null
+
+      - name: duration_min
+        description: "Non-null only for complete trips. Validated positive when present."
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 300
+              row_condition: "duration_min IS NOT NULL"
+
+      - name: distance_km
+        description: "Non-null only for is_complete_trip=true rows with geo data."
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+              row_condition: "distance_km IS NOT NULL"
+
+      - name: is_complete_trip
+        tests:
+          - not_null

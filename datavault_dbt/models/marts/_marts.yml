@@ -1,0 +1,90 @@
+version: 2
+
+models:
+  - name: mart_daily_ridership
+    description: "Daily trip count and revenue aggregated by corridor and date."
+    columns:
+      - name: trip_date
+        tests:
+          - not_null
+      - name: corridor_id
+        tests:
+          - not_null
+      - name: total_trips
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 10000
+      - name: total_revenue
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 50000000
+              row_condition: "total_revenue IS NOT NULL"
+
+  - name: mart_corridor_stats
+    description: "Per-corridor aggregate statistics for April 2023."
+    columns:
+      - name: corridor_id
+        tests:
+          - not_null
+          - unique
+      - name: total_trips
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 50000
+      - name: completion_rate_pct
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+
+  - name: mart_stop_performance
+    description: >
+      Stop-level boarding volume and revenue, normalized to performance_score 0-100.
+      Only stops with at least one boarding with non-null stop_id are included.
+    columns:
+      - name: stop_id
+        tests:
+          - not_null
+          - unique
+      - name: total_boardings
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 100000
+      - name: performance_score
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+
+  - name: mart_surge_analysis
+    description: "Trip demand by hour-of-day × day-of-week × corridor, with demand_index relative to corridor hourly average."
+    columns:
+      - name: corridor_id
+        tests:
+          - not_null
+      - name: hour_of_day
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 23
+      - name: day_of_week
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 7
+      - name: demand_index
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 20
