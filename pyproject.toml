@@ -1,0 +1,14 @@
+[project]
+name = "datavault"
+version = "0.1.0"
+description = "dbt + DuckDB analytics engineering portfolio project on NYC Taxi data"
+requires-python = ">=3.11"
+dependencies = [
+    "dbt-core>=1.11.10",
+    "dbt-duckdb>=1.10.1",
+    "httpx>=0.28.1",
+    "pandas>=3.0.3",
+    "plotly>=6.7.0",
+    "pytest>=9.0.3",
+    "streamlit>=1.57.0",
+]
