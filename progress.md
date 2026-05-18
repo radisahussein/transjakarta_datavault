@@ -10,7 +10,7 @@ Branch strategy: `stage` → `phase/<N>-<description>` → PR → merge
 
 | Phase | Name | Status | Branch |
 |-------|------|--------|--------|
-| 1 | Project Foundation & Raw Data Pipeline | IN PROGRESS | phase/1-foundation |
+| 1 | Project Foundation & Raw Data Pipeline | DONE | phase/1-foundation |
 | 2 | Staging Layer | NOT STARTED | — |
 | 3 | Intermediate + Mart Layer | NOT STARTED | — |
 | 4 | CI Pipeline & dbt Docs | NOT STARTED | — |
@@ -18,73 +18,63 @@ Branch strategy: `stage` → `phase/<N>-<description>` → PR → merge
 
 ---
 
-## Phase 1: Project Foundation & Raw Data Pipeline — IN PROGRESS
+## Phase 1: Project Foundation & Raw Data Pipeline — DONE
 
-### Completed Steps
-- [x] `uv init datavault`, add all deps (dbt-core, dbt-duckdb, streamlit, plotly, pandas, pytest, httpx)
-- [x] Create directory structure: `scripts/`, `dashboard/`, `tests/`, `data/raw/`, `data/sample/`
-- [x] `dbt init datavault_dbt --skip-profile-setup`
-- [x] Remove dbt example models, create `models/staging/`, `models/intermediate/`, `models/marts/`
-- [x] Create `profiles.yml` with dbt-duckdb config (reads `DUCKDB_PATH` env var, defaults to `datavault.duckdb`)
-- [x] Update `datavault_dbt/dbt_project.yml` (profile=datavault, staging=view, intermediate=view, marts=table)
-- [x] Create `datavault_dbt/packages.yml` with dbt-utils + dbt-expectations
-- [x] Run `dbt deps` → dbt_utils, dbt_expectations, dbt_date installed
+**Completed:** 2026-05-19
 
-### Completed Steps (continued)
-- [x] Create `scripts/download_data.py` (Kaggle API download)
-- [x] Create `scripts/generate_seeds.py` (extract stops.csv + corridors.csv)
-- [x] Create `scripts/load_raw.py` (DuckDB view over CSV)
-- [x] Create `scripts/verify_raw.py` (row count + column assertions)
-- [x] Create `tests/test_phase1.py` (7 tests)
-- [x] Create `.gitignore`
+### What Was Done
 
-### BLOCKED — Manual Step Required
+- uv project initialized with dbt-core, dbt-duckdb, streamlit, plotly, pandas, pytest, httpx, kaggle
+- Directory structure: `scripts/`, `dashboard/`, `tests/`, `data/raw/`, `datavault_dbt/`
+- `dbt init datavault_dbt` — removed example models, created `models/staging/`, `models/intermediate/`, `models/marts/`
+- `profiles.yml` — dbt-duckdb adapter, reads `DUCKDB_PATH` env var
+- `datavault_dbt/dbt_project.yml` — profile=datavault, staging=view, intermediate=view, marts=table
+- `datavault_dbt/packages.yml` — dbt-utils + dbt-expectations, `dbt deps` run
+- `data/raw/transjakarta.csv` — April 2023, **189,500 rows**, 22 columns (committed to repo, ~42MB)
+- `datavault_dbt/seeds/stops.csv` — 5,250 unique tap-in stops with lat/lon
+- `datavault_dbt/seeds/corridors.csv` — 221 unique corridors
+- `scripts/generate_seeds.py` — extracts stops + corridors from raw CSV
+- `scripts/load_raw.py` — creates DuckDB view `raw_transjakarta` over CSV
+- `scripts/verify_raw.py` — row count, null rate, column assertions
+- `scripts/download_data.py` — Kaggle Bearer token download (via kaggle.json key)
+- `tests/test_phase1.py` — 7 tests
+- `.gitignore` — excludes *.duckdb, __pycache__, dbt target/
 
-**User must download the dataset before tests can run:**
+**Schema correction discovered:** dataset has `payCardBirthDate` (YYYYMMDD int), not `payCardAge`. All files updated accordingly. `payAmount` null rate is 1.96% (legitimate — free/transfer trips), threshold set to 5%.
 
-```bash
-# Option A: Kaggle CLI (set up credentials first)
-# 1. Go to https://www.kaggle.com/settings → API → Create New Token
-# 2. Place downloaded kaggle.json at ~/.kaggle/kaggle.json
-# 3. chmod 600 ~/.kaggle/kaggle.json
-uv run python scripts/download_data.py
+### Test Results
 
-# Option B: Manual browser download
-# 1. Go to https://www.kaggle.com/datasets/dikasiganteng/transjakarta
-# 2. Download the dataset ZIP
-# 3. Unzip and rename the CSV to: data/raw/transjakarta.csv
+```
+dbt debug:   All checks passed.
+dbt seed:    PASS=2 WARN=0 ERROR=0 (corridors: 221 rows, stops: 5250 rows)
+pytest:      7 passed in 0.45s (run twice — deterministic)
+verify_raw:  Row count: 189,500 | tapInTime null: 0.00% | payAmount null: 1.96% | ALL CHECKS PASSED
 ```
 
-### After Data Is Placed — Run These In Order
+### Commits
 
-```bash
-# Generate seeds from raw data
-uv run python scripts/generate_seeds.py
-
-# Commit seeds + raw CSV
-git add data/raw/transjakarta.csv datavault_dbt/seeds/stops.csv datavault_dbt/seeds/corridors.csv
-
-# Load raw view into DuckDB
-uv run python scripts/load_raw.py
-
-# Run dbt debug
-uv run dbt debug --project-dir datavault_dbt --profiles-dir .
-
-# Run dbt seed
-uv run dbt seed --project-dir datavault_dbt --profiles-dir .
-
-# Run tests
-uv run pytest tests/test_phase1.py -v
-
-# Verify raw data
-uv run python scripts/verify_raw.py
-
-# Run tests second time (determinism check)
-uv run pytest tests/test_phase1.py -v
-```
-
-Expected: 7 passed, ALL CHECKS PASSED. Then commit progress.md + end session.
+- `8c678ff` chore: initial project setup - plans, progress tracker, CLAUDE.md
+- `f2f90ba` chore: init uv project with dbt-core, dbt-duckdb, plotly, streamlit deps
+- `d43f9eb` chore: init dbt project structure with profiles.yml and dbt_project.yml
+- `ea9f494` feat: add data pipeline scripts for TransJakarta raw data
+- `9114be8` feat: add test_phase1.py with 7 assertions for Phase 1 verification
+- `927b129` feat: add raw TransJakarta CSV and generated seed files
+- `62e8b1a` fix: update column refs from payCardAge to payCardBirthDate, adjust thresholds
 
 ---
 
-<!-- Phases 2-5 will be filled in as they are completed -->
+## Phase 2: Staging Layer — NOT STARTED
+
+### What Must Be Done
+- [ ] Create `datavault_dbt/models/staging/sources.yml` — define `tlc.raw_transjakarta` source
+- [ ] Create `stg_transactions.sql` — clean, cast, filter (remove null tap-out, invalid pay)
+- [ ] Create `stg_stops.sql` — from seed ref, with surrogate key
+- [ ] Create `stg_corridors.sql` — from seed ref
+- [ ] Create `_stg_transactions.yml` — schema tests: not_null, unique, accepted_values, dbt_expectations ranges
+- [ ] Create `_stg_stops.yml` and `_stg_corridors.yml` — not_null, unique tests
+- [ ] Create `tests/test_phase2.py` — pytest on stg layer data quality
+- [ ] Run `dbt build --select staging --project-dir datavault_dbt --profiles-dir .` → PASS=XX WARN=0 ERROR=0
+- [ ] Run `pytest tests/test_phase2.py -v` → all passed
+- [ ] Run both twice for determinism check
+- [ ] Update progress.md
+- [ ] End session, wait for verification
