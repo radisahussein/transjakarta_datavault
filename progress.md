@@ -30,19 +30,60 @@ Branch strategy: `stage` → `phase/<N>-<description>` → PR → merge
 - [x] Create `datavault_dbt/packages.yml` with dbt-utils + dbt-expectations
 - [x] Run `dbt deps` → dbt_utils, dbt_expectations, dbt_date installed
 
-### What Must Be Done Next
-- [ ] Place raw CSV: `data/raw/transjakarta.csv` (download from Kaggle, commit to repo)
-- [ ] Create `scripts/generate_seeds.py` → extract stops.csv + corridors.csv → commit seeds
-- [ ] Create `scripts/load_raw.py` (DuckDB view over transjakarta CSV)
-- [ ] Create `scripts/verify_raw.py` with column + row assertions
-- [ ] Create `tests/test_phase1.py` (7 tests)
-- [ ] Run `dbt seed --project-dir datavault_dbt --profiles-dir .` → verify stops + corridors rows
-- [ ] Run `dbt debug --project-dir datavault_dbt --profiles-dir .` → All checks passed
-- [ ] Run `uv run pytest tests/test_phase1.py -v` → 7 passed
-- [ ] Run `uv run python scripts/verify_raw.py` → ALL CHECKS PASSED
-- [ ] Run tests second time to confirm deterministic
-- [ ] Commit progress.md update
-- [ ] End session, wait for verification
+### Completed Steps (continued)
+- [x] Create `scripts/download_data.py` (Kaggle API download)
+- [x] Create `scripts/generate_seeds.py` (extract stops.csv + corridors.csv)
+- [x] Create `scripts/load_raw.py` (DuckDB view over CSV)
+- [x] Create `scripts/verify_raw.py` (row count + column assertions)
+- [x] Create `tests/test_phase1.py` (7 tests)
+- [x] Create `.gitignore`
+
+### BLOCKED — Manual Step Required
+
+**User must download the dataset before tests can run:**
+
+```bash
+# Option A: Kaggle CLI (set up credentials first)
+# 1. Go to https://www.kaggle.com/settings → API → Create New Token
+# 2. Place downloaded kaggle.json at ~/.kaggle/kaggle.json
+# 3. chmod 600 ~/.kaggle/kaggle.json
+uv run python scripts/download_data.py
+
+# Option B: Manual browser download
+# 1. Go to https://www.kaggle.com/datasets/dikasiganteng/transjakarta
+# 2. Download the dataset ZIP
+# 3. Unzip and rename the CSV to: data/raw/transjakarta.csv
+```
+
+### After Data Is Placed — Run These In Order
+
+```bash
+# Generate seeds from raw data
+uv run python scripts/generate_seeds.py
+
+# Commit seeds + raw CSV
+git add data/raw/transjakarta.csv datavault_dbt/seeds/stops.csv datavault_dbt/seeds/corridors.csv
+
+# Load raw view into DuckDB
+uv run python scripts/load_raw.py
+
+# Run dbt debug
+uv run dbt debug --project-dir datavault_dbt --profiles-dir .
+
+# Run dbt seed
+uv run dbt seed --project-dir datavault_dbt --profiles-dir .
+
+# Run tests
+uv run pytest tests/test_phase1.py -v
+
+# Verify raw data
+uv run python scripts/verify_raw.py
+
+# Run tests second time (determinism check)
+uv run pytest tests/test_phase1.py -v
+```
+
+Expected: 7 passed, ALL CHECKS PASSED. Then commit progress.md + end session.
 
 ---
 
