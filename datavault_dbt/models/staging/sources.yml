@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: transjakarta
+    schema: main
+    description: "TransJakarta BRT tap-in/tap-out transactions, April 2023"
+    tables:
+      - name: raw_transjakarta
+        description: "Raw CSV loaded as DuckDB view via scripts/load_raw.py"
