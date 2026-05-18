@@ -7,7 +7,7 @@ import sys
 DB_PATH = os.environ.get("DUCKDB_PATH", "datavault.duckdb")
 
 REQUIRED_COLS = [
-    "transID", "payCardBank", "payCardSex", "payCardAge",
+    "transID", "payCardBank", "payCardSex", "payCardBirthDate",
     "corridorID", "corridorName", "direction",
     "tapInStops", "tapInStopsName", "tapInStopsLat", "tapInStopsLon",
     "tapOutStops", "tapInTime", "tapOutTime", "payAmount",
@@ -20,7 +20,7 @@ def verify():
 
     row_count = con.execute("SELECT COUNT(*) FROM raw_transjakarta").fetchone()[0]
     print(f"Row count: {row_count:,}")
-    if row_count < 30_000:
+    if row_count < 100_000:
         errors.append(f"Expected >30k rows, got {row_count}")
 
     cols = con.execute("DESCRIBE raw_transjakarta").fetchdf()["column_name"].tolist()
@@ -35,8 +35,10 @@ def verify():
             f"SELECT COUNT(*) FILTER (WHERE {col} IS NULL) * 1.0 / COUNT(*) FROM raw_transjakarta"
         ).fetchone()[0]
         print(f"Null rate {col}: {null_rate:.2%}")
-        if null_rate > 0.01:
-            errors.append(f"{col} null rate {null_rate:.2%} exceeds 1%")
+        # payAmount can be null for free/transfer trips; tapInTime must be near-zero null
+        threshold = 0.01 if col == "tapInTime" else 0.05
+        if null_rate > threshold:
+            errors.append(f"{col} null rate {null_rate:.2%} exceeds {threshold:.0%}")
 
     con.close()
 

@@ -197,7 +197,7 @@ payCardID       — anonymized card ID
 payCardBank     — issuing bank (BCA, BNI, BRI, DKI, MANDIRI, etc.)
 payCardName     — cardholder name (anonymized)
 payCardSex      — gender: L (Laki-laki/Male) or P (Perempuan/Female)
-payCardAge      — cardholder age (integer)
+payCardBirthDate — cardholder birth date as integer (YYYYMMDD)
 corridorID      — corridor code (e.g. "1", "JAK.1", "T11")
 corridorName    — corridor name (e.g. "Blok M - Kota")
 direction       — 0 or 1 (direction of travel on corridor)

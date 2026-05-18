@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 RAW_CSV = ROOT / "data/raw/transjakarta.csv"
 REQUIRED_COLS = [
-    "transID", "payCardBank", "payCardSex", "payCardAge",
+    "transID", "payCardBank", "payCardSex", "payCardBirthDate",
     "corridorID", "corridorName", "direction",
     "tapInStops", "tapInStopsName", "tapInStopsLat", "tapInStopsLon",
     "tapOutStops", "tapInTime", "tapOutTime", "payAmount",
@@ -53,7 +53,7 @@ def test_raw_csv_row_count():
         f"SELECT COUNT(*) FROM read_csv('{RAW_CSV}', auto_detect=true)"
     ).fetchone()[0]
     con.close()
-    assert n > 30_000, f"Expected >30k rows, got {n}"
+    assert n > 100_000, f"Expected >100k rows, got {n}"
 
 
 def test_raw_csv_required_columns():
