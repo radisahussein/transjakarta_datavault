@@ -1,6 +1,6 @@
 # DataVault — dbt + DuckDB Analytics Engineering Project
 
-Analytics engineering portfolio project. NYC Taxi Trip data → dbt medallion pipeline → Streamlit dashboard.
+Analytics engineering portfolio project. TransJakarta BRT transaction data → dbt medallion pipeline → Streamlit dashboard.
 
 ## Project Structure
 
@@ -181,29 +181,58 @@ If results differ between runs, investigate before ending the session.
 
 ## Data Notes
 
-- TLC Yellow Taxi Jan 2024: `https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet` (~460MB, ~2.96M rows)
-- TLC Yellow Taxi Feb 2024: `https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-02.parquet` (~430MB, ~2.77M rows)
-- TLC Yellow Taxi Mar 2024: `https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-03.parquet` (~500MB, ~3.58M rows)
-- Taxi zone lookup CSV: `https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv` (265 rows)
-- `data/raw/` is gitignored — never commit raw Parquet
-- `data/sample/` has 10k-row sample Parquet committed for CI
+- Dataset: TransJakarta bus rapid transit transactions, April 2023
+- Source: Kaggle — `dikasiganteng/transjakarta` (~37k rows, ~5MB CSV)
+- Download: `kaggle datasets download -d dikasiganteng/transjakarta --unzip -p data/raw/`
+- Requires Kaggle API token: place `~/.kaggle/kaggle.json` before running download script
+- Raw CSV committed to `data/raw/transjakarta.csv` (small enough — no LFS needed)
+- Seeds generated via `scripts/generate_seeds.py` from raw data: `stops.csv`, `corridors.csv`
+- `data/raw/` is NOT gitignored for this project (dataset is small, ~5MB)
+
+## Raw Schema (TransJakarta April 2023)
+
+```
+transID         — transaction ID (string)
+payCardID       — anonymized card ID
+payCardBank     — issuing bank (BCA, BNI, BRI, DKI, MANDIRI, etc.)
+payCardName     — cardholder name (anonymized)
+payCardSex      — gender: L (Laki-laki/Male) or P (Perempuan/Female)
+payCardAge      — cardholder age (integer)
+corridorID      — corridor code (e.g. "1", "JAK.1", "T11")
+corridorName    — corridor name (e.g. "Blok M - Kota")
+direction       — 0 or 1 (direction of travel on corridor)
+tapInStops      — tap-in stop ID
+tapInStopsName  — tap-in stop name
+tapInStopsLat   — tap-in stop latitude
+tapInStopsLon   — tap-in stop longitude
+tapOutStops     — tap-out stop ID (nullable — missed tap-out)
+tapOutStopsName — tap-out stop name (nullable)
+tapOutStopsLat  — tap-out stop latitude (nullable)
+tapOutStopsLon  — tap-out stop longitude (nullable)
+stopStartSeq    — sequence position of tap-in stop on corridor
+stopEndSeq      — sequence position of tap-out stop on corridor (nullable)
+tapInTime       — tap-in timestamp
+tapOutTime      — tap-out timestamp (nullable)
+payAmount       — fare paid (IDR)
+```
 
 ## DuckDB Schema
 
 ```
-raw layer (external views via read_parquet):
-  raw_yellow_trips    — direct Parquet read, no copy
+raw layer (DuckDB view over CSV):
+  raw_transjakarta    — direct read_csv, no copy
 
 staging layer (dbt models, view materialization):
-  stg_yellow_trips    — cleaned, cast, filtered
-  stg_taxi_zones      — from seed
+  stg_transactions    — cleaned, cast, filtered (removed null tap-out)
+  stg_stops           — from seed: unique stops with lat/lon
+  stg_corridors       — from seed: unique corridors
 
 intermediate layer (dbt models, view materialization):
-  int_trips_enriched  — joined with zones, derived columns
+  int_trips_enriched  — derived columns: duration, distance, time features
 
 mart layer (dbt models, TABLE materialization):
-  mart_daily_trips        — daily aggregates by borough
-  mart_borough_revenue    — O-D revenue matrix
-  mart_zone_performance   — per-zone composite score (0-100)
-  mart_surge_analysis     — hour x day x borough demand heatmap
+  mart_daily_ridership    — daily trip count + revenue by corridor
+  mart_corridor_flow      — O-D matrix between corridors
+  mart_stop_performance   — per-stop composite score (0-100)
+  mart_surge_analysis     — hour × day × corridor demand heatmap
 ```

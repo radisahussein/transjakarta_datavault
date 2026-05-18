@@ -373,24 +373,29 @@ Goal: the thing that gets you interviews.
 
 ### The Solution
 
-Take a rich public dataset — **NYC Taxi Trip data** (TLC, public domain, ~9GB across 3 months) — and build a full dbt project on top of DuckDB that models it correctly. The deliverable: a Streamlit analytics dashboard showing trip patterns, borough-level revenue, surge-hour demand analysis, and zone performance metrics.
+Take a rich public dataset — **TransJakarta BRT transaction data** (Kaggle, public domain, April 2023, ~37k rows) — and build a full dbt project on top of DuckDB that models it correctly. The deliverable: a Streamlit analytics dashboard showing ridership patterns, corridor-level revenue, surge-hour demand analysis, and stop performance metrics.
 
-**The creative angle:** build a `mart_zone_performance` model — a composite score (0–100) per pickup zone using revenue density, trip volume, and tip rate. Realistic business metric, shows modeling maturity, and is achievable with the actual TLC schema (no driver IDs in yellow taxi data — zone-level is the correct granularity).
+**The creative angle:** build a `mart_stop_performance` model — a composite score (0–100) per tap-in bus stop using throughput volume, revenue density, and gender diversity index. Realistic transit operations metric, shows modeling maturity, and maps directly to columns available in the dataset.
+
+**Why TransJakarta over NYC Taxi:**
+- Real Indonesian data — differentiates portfolio from 10,000 identical taxi projects
+- Has demographic context (age, gender per transaction) — richer analytical story
+- Has geolocation (lat/lon per stop) — enables spatial analysis without external GeoJSON
+- Dataset is ~5MB committed directly to repo — no download scripts needed in CI
+- Stop → corridor → direction hierarchy mirrors real transit data structures hiring managers see
 
 **Feasibility notes:**
-- Yellow taxi Parquet files have NO driver/medallion ID. `mart_driver_score` as originally planned is not feasible with this dataset. `mart_zone_performance` uses actual available columns and is more analytically interesting.
-- `Great Expectations` is heavyweight and fragile for a portfolio CI pipeline. Replaced with `dbt-expectations` (lightweight dbt package, same patterns, zero extra infra).
-- `pydeck` requires a Mapbox token (paid for production use). Replaced with `plotly` choropleth using NYC borough GeoJSON (public domain, no token needed).
-- NYC TLC Parquet Jan 2024 = ~460MB, ~2.96M rows. Feb = ~430MB, ~2.77M rows. Mar = ~500MB, ~3.58M rows. Total 3 months ≈ 1.4GB raw, ~3MB DuckDB mart tables.
-- CI downloads a 10k-row sample Parquet committed to repo — not the full 460MB file. Full data is local-only. This is the correct pattern.
-- GitHub Actions artifact for DuckDB (mart only): ~3MB. Well within 500MB free limit.
+- Full dataset is ~37k rows (small). It is committed directly to `data/raw/`. No download step needed in CI.
+- Seeds (`stops.csv`, `corridors.csv`) are generated once via `scripts/generate_seeds.py` and committed.
+- `dbt-expectations` replaces `Great Expectations` — same test vocabulary, zero extra infra, installs via `packages.yml`.
+- `plotly` replaces `pydeck` — no Mapbox token required, scatter_mapbox works with open tiles.
 
 ### Tech Stack
 
 | Layer | Choice | Why |
 |-------|--------|-----|
 | Package mgr | uv | Fast, lockfile-based, modern |
-| Raw data | NYC TLC Parquet Jan–Mar 2024 (public S3) | Free, real, multi-GB proves scale |
+| Raw data | TransJakarta April 2023 CSV (Kaggle) | Free, real Indonesian data, committed to repo |
 | Transform | dbt-core 1.8 + dbt-duckdb 1.8 | Industry standard AE stack |
 | dbt packages | dbt-utils 1.x + dbt-expectations 0.10.x | Extended tests without extra infra |
 | Storage | DuckDB 1.1 | Native Parquet reader, columnar, no server |
@@ -405,43 +410,60 @@ Take a rich public dataset — **NYC Taxi Trip data** (TLC, public domain, ~9GB 
 
 **Why not Snowflake/BigQuery?** DuckDB is portable, zero-infra, runs in CI for free, and is production-used (MotherDuck). Correct tool, not the impressive-sounding tool.
 
-### Data Schema (actual TLC yellow taxi columns)
+### Data Schema (TransJakarta April 2023 — actual columns)
 
 ```
-VendorID, tpep_pickup_datetime, tpep_dropoff_datetime, passenger_count,
-trip_distance, RatecodeID, store_and_fwd_flag, PULocationID, DOLocationID,
-payment_type, fare_amount, extra, mta_tax, tip_amount, tolls_amount,
-improvement_surcharge, total_amount, congestion_surcharge, Airport_fee
+transID          — transaction ID
+payCardID        — anonymized card ID
+payCardBank      — issuing bank (BCA, BNI, BRI, DKI, MANDIRI, etc.)
+payCardName      — cardholder name (anonymized)
+payCardSex       — gender: L (Male) or P (Female)
+payCardAge       — cardholder age
+corridorID       — corridor code (e.g. "1", "T11", "JAK.1")
+corridorName     — corridor full name (e.g. "Blok M - Kota")
+direction        — 0 or 1 (travel direction on corridor)
+tapInStops       — tap-in stop ID
+tapInStopsName   — tap-in stop name
+tapInStopsLat    — tap-in stop latitude
+tapInStopsLon    — tap-in stop longitude
+tapOutStops      — tap-out stop ID (nullable — missed tap-out)
+tapOutStopsName  — tap-out stop name (nullable)
+tapOutStopsLat   — tap-out stop latitude (nullable)
+tapOutStopsLon   — tap-out stop longitude (nullable)
+stopStartSeq     — sequence position of tap-in stop on corridor
+stopEndSeq       — sequence position of tap-out stop (nullable)
+tapInTime        — tap-in timestamp
+tapOutTime       — tap-out timestamp (nullable)
+payAmount        — fare paid (IDR)
 ```
-
-No driver ID. Zone IDs (PULocationID, DOLocationID) map to `taxi_zones.csv` → zone name + borough.
 
 ### General Flow
 
 ```
-[NYC TLC S3 Parquet — Jan/Feb/Mar 2024]
-        ↓ scripts/download_data.py
-[data/raw/*.parquet — local only, gitignored]
-        ↓ scripts/load_raw.py (DuckDB external view via read_parquet glob)
-[raw_yellow_trips — DuckDB view over Parquet files]
+[data/raw/transjakarta.csv — committed to repo, ~5MB]
+        ↓ scripts/load_raw.py (DuckDB view via read_csv)
+[raw_transjakarta — DuckDB view, ~37k rows]
+        ↓ scripts/generate_seeds.py (run once, output committed)
+[seeds/stops.csv — unique stops with lat/lon]
+[seeds/corridors.csv — unique corridors]
         ↓ dbt seed
-[stg_taxi_zones — from seeds/taxi_zones.csv, 265 rows]
+[stg_stops — from seeds/stops.csv]
+[stg_corridors — from seeds/corridors.csv]
         ↓ dbt build staging/
-[stg_yellow_trips — cleaned, cast, filtered ~8.5M rows]
-[stg_taxi_zones — 265 zone/borough rows]
+[stg_transactions — cleaned, cast, filtered (null tap-out removed)]
         ↓ dbt build intermediate/
-[int_trips_enriched — joined with zones, derived cols added]
+[int_trips_enriched — duration, distance (Haversine), hour/day features, gender/age]
         ↓ dbt build marts/
-[mart_daily_trips — daily vol + revenue by borough]
-[mart_borough_revenue — O-D revenue matrix, 5×5]
-[mart_zone_performance — per-zone composite score 0-100]
-[mart_surge_analysis — trips by hour × day × borough]
+[mart_daily_ridership  — daily trips + revenue by corridor]
+[mart_corridor_flow    — O-D matrix between corridors]
+[mart_stop_performance — per-stop composite score 0-100]
+[mart_surge_analysis   — hour × day × corridor demand heatmap]
         ↓ dbt test
-[all schema + custom + dbt-expectations tests]
-        ↓ GitHub Actions CI (sample data)
+[all schema + custom + dbt-expectations tests pass]
+        ↓ GitHub Actions CI (same CSV, no download needed)
 [dbt build exits 0 → upload mart DuckDB artifact]
         ↓ Streamlit reads mart tables
-[dashboard: 4 tabs — Overview, Borough, Zone Score, Surge]
+[dashboard: 4 tabs — Overview, Corridor Flow, Stop Score, Surge]
 ```
 
 ---
@@ -499,92 +521,81 @@ No driver ID. Zone IDs (PULocationID, DOLocationID) map to `taxi_zones.csv` → 
    ```
    Run `uv run dbt deps`
 
-7. Download taxi zone lookup + add as seed:
-   ```bash
-   curl -o datavault_dbt/seeds/taxi_zones.csv \
-     "https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv"
-   ```
-   Rename columns in seed to: `location_id, borough, zone, service_zone`
+7. Place raw data:
+   - Download from Kaggle: `kaggle datasets download -d dikasiganteng/transjakarta --unzip -p data/raw/`
+   - Rename the downloaded CSV to `data/raw/transjakarta.csv`
+   - Commit to repo: `git add data/raw/transjakarta.csv`
 
-8. Create `scripts/download_data.py`:
-   - Downloads Jan/Feb/Mar 2024 yellow taxi Parquet to `data/raw/`
-   - Skips if file already exists
-   - Shows download progress + file sizes
+8. Create `scripts/generate_seeds.py`:
+   - Read `data/raw/transjakarta.csv`
+   - Extract unique stops → write `datavault_dbt/seeds/stops.csv` (columns: stop_id, stop_name, lat, lon)
+   - Extract unique corridors → write `datavault_dbt/seeds/corridors.csv` (columns: corridor_id, corridor_name)
+   - Commit both seed CSVs
 
 9. Create `scripts/load_raw.py`:
-   - Creates DuckDB view: `CREATE OR REPLACE VIEW raw_yellow_trips AS SELECT * FROM read_parquet('data/raw/*.parquet')`
-   - Logs row count, min/max pickup_datetime
+   - Creates DuckDB view: `CREATE OR REPLACE VIEW raw_transjakarta AS SELECT * FROM read_csv('data/raw/transjakarta.csv', auto_detect=true)`
+   - Logs row count, min/max tapInTime
 
-10. Create `data/sample/yellow_tripdata_sample.parquet`:
-    - Script: read Jan 2024, take first 10,000 rows, write to sample path
-    - Commit this file (small enough: ~300KB)
-
-11. Create `scripts/verify_raw.py`:
+10. Create `scripts/verify_raw.py`:
     - Connects to DuckDB
-    - Asserts: row_count > 1_000_000
-    - Asserts: null rate in tpep_pickup_datetime < 0.01
-    - Asserts: null rate in total_amount < 0.01
+    - Asserts: row_count > 30_000
+    - Asserts: null rate in tapInTime < 0.01
+    - Asserts: null rate in payAmount < 0.01
     - Asserts: all expected columns present
     - Prints summary table
 
-12. Run `uv run dbt seed` → verify 265 rows in taxi_zones
-13. Run `uv run dbt debug` → all checks pass
+11. Run `uv run dbt seed --profiles-dir .` → verify stops + corridors rows
+12. Run `uv run dbt debug --profiles-dir .` → all checks pass
 
 **Commit breakdown (Phase 1):**
 ```
 chore: init uv project with dbt-core, dbt-duckdb, plotly, streamlit deps
 chore: init dbt project structure with profiles.yml and dbt_project.yml
 chore: add dbt-utils and dbt-expectations packages, run dbt deps
-feat: add taxi_zones seed (265 zone/borough rows)
-feat: add download_data.py script for TLC Parquet files
-feat: add load_raw.py script creating DuckDB view over Parquet glob
-feat: add 10k-row sample Parquet for CI use
-feat: add verify_raw.py sanity check script
-docs: add .gitignore for data/raw/, datavault.duckdb, __pycache__
+feat: add raw TransJakarta CSV to data/raw/ (~37k rows, April 2023)
+feat: add generate_seeds.py and commit stops.csv + corridors.csv seeds
+feat: add load_raw.py creating DuckDB view over transjakarta CSV
+feat: add verify_raw.py sanity check script with column + row assertions
+feat: add test_phase1.py pytest suite
+docs: update .gitignore for datavault.duckdb, __pycache__, dbt target/
 ```
 
 **Phase 1 Test Suite & Expected Results:**
 
 ```bash
 # Test 1: dbt debug
-uv run dbt debug --profiles-dir .
+uv run dbt debug --project-dir datavault_dbt --profiles-dir .
 # Expected: All checks passed.
 
 # Test 2: dbt seed
-uv run dbt seed --profiles-dir .
+uv run dbt seed --project-dir datavault_dbt --profiles-dir .
 # Expected:
-#   1 of 1 START seed file datavault_dbt.taxi_zones ................. [RUN]
-#   1 of 1 OK loaded seed file datavault_dbt.taxi_zones ............. [INSERT 265 in Xs]
+#   1 of 2 START seed file datavault_dbt.stops ...................... [RUN]
+#   1 of 2 OK loaded seed file datavault_dbt.stops .................. [INSERT NNN in Xs]
+#   2 of 2 START seed file datavault_dbt.corridors .................. [RUN]
+#   2 of 2 OK loaded seed file datavault_dbt.corridors .............. [INSERT NN in Xs]
 #   Completed successfully
 
 # Test 3: verify raw data
 uv run python scripts/verify_raw.py
 # Expected output:
-#   Raw view row count: 9,312,xxx (3 months combined)
-#   Null rate tpep_pickup_datetime: 0.000x%
-#   Null rate total_amount: 0.000x%
-#   All expected columns: PASS
+#   Raw view row count: 37,900 (approx)
+#   Null rate tapInTime:   0.00%
+#   Null rate payAmount:   0.00%
+#   All expected columns:  PASS
 #   Summary: ALL CHECKS PASSED
 
 # Test 4: pytest
 uv run pytest tests/test_phase1.py -v
 # Expected:
-#   tests/test_phase1.py::test_seed_file_exists PASSED
-#   tests/test_phase1.py::test_sample_parquet_exists PASSED
-#   tests/test_phase1.py::test_sample_parquet_row_count PASSED
+#   tests/test_phase1.py::test_raw_csv_exists PASSED
+#   tests/test_phase1.py::test_stops_seed_exists PASSED
+#   tests/test_phase1.py::test_corridors_seed_exists PASSED
 #   tests/test_phase1.py::test_profiles_yml_valid PASSED
 #   tests/test_phase1.py::test_dbt_project_yml_valid PASSED
-#   5 passed in Xs
-
-# Test 5: DuckDB column check
-uv run python -c "
-import duckdb
-con = duckdb.connect('datavault.duckdb')
-cols = con.execute('DESCRIBE raw_yellow_trips').fetchdf()['column_name'].tolist()
-required = ['VendorID','tpep_pickup_datetime','PULocationID','DOLocationID','total_amount']
-assert all(c in cols for c in required), f'Missing: {set(required)-set(cols)}'
-print('Column check: PASS')
-"
+#   tests/test_phase1.py::test_raw_csv_row_count PASSED
+#   tests/test_phase1.py::test_raw_csv_required_columns PASSED
+#   7 passed in Xs
 ```
 
 **pytest file `tests/test_phase1.py`:**
@@ -595,33 +606,46 @@ import duckdb
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
+RAW_CSV = ROOT / "data/raw/transjakarta.csv"
+REQUIRED_COLS = [
+    "transID", "payCardBank", "payCardSex", "payCardAge",
+    "corridorID", "corridorName", "direction",
+    "tapInStops", "tapInStopsName", "tapInStopsLat", "tapInStopsLon",
+    "tapOutStops", "tapInTime", "tapOutTime", "payAmount",
+]
 
-def test_seed_file_exists():
-    assert (ROOT / "datavault_dbt/seeds/taxi_zones.csv").exists()
+def test_raw_csv_exists():
+    assert RAW_CSV.exists(), "data/raw/transjakarta.csv not found"
 
-def test_sample_parquet_exists():
-    assert (ROOT / "data/sample/yellow_tripdata_sample.parquet").exists()
+def test_stops_seed_exists():
+    assert (ROOT / "datavault_dbt/seeds/stops.csv").exists()
 
-def test_sample_parquet_row_count():
-    con = duckdb.connect()
-    count = con.execute(
-        "SELECT COUNT(*) FROM read_parquet('data/sample/yellow_tripdata_sample.parquet')"
-    ).fetchone()[0]
-    assert count == 10_000, f"Expected 10000 rows, got {count}"
+def test_corridors_seed_exists():
+    assert (ROOT / "datavault_dbt/seeds/corridors.csv").exists()
 
 def test_profiles_yml_valid():
     p = ROOT / "profiles.yml"
     assert p.exists()
     cfg = yaml.safe_load(p.read_text())
     assert "datavault" in cfg
-    assert "outputs" in cfg["datavault"]
+    assert cfg["datavault"]["outputs"]["dev"]["type"] == "duckdb"
 
 def test_dbt_project_yml_valid():
     p = ROOT / "datavault_dbt/dbt_project.yml"
-    assert p.exists()
     cfg = yaml.safe_load(p.read_text())
     assert cfg["profile"] == "datavault"
-    assert "models" in cfg
+    assert cfg["models"]["datavault_dbt"]["marts"]["+materialized"] == "table"
+
+def test_raw_csv_row_count():
+    con = duckdb.connect()
+    n = con.execute(f"SELECT COUNT(*) FROM read_csv('{RAW_CSV}', auto_detect=true)").fetchone()[0]
+    assert n > 30_000, f"Expected >30k rows, got {n}"
+
+def test_raw_csv_required_columns():
+    con = duckdb.connect()
+    df = con.execute(f"SELECT * FROM read_csv('{RAW_CSV}', auto_detect=true) LIMIT 1").fetchdf()
+    missing = [c for c in REQUIRED_COLS if c not in df.columns]
+    assert not missing, f"Missing columns: {missing}"
 ```
 
 ---

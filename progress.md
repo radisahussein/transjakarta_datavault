@@ -1,6 +1,6 @@
 # DataVault — Progress Log
 
-Project: dbt + DuckDB Analytics Engineering (NYC Taxi)
+Project: dbt + DuckDB Analytics Engineering (TransJakarta BRT)
 Repo: datavault
 Branch strategy: `stage` → `phase/<N>-<description>` → PR → merge
 
@@ -10,7 +10,7 @@ Branch strategy: `stage` → `phase/<N>-<description>` → PR → merge
 
 | Phase | Name | Status | Branch |
 |-------|------|--------|--------|
-| 1 | Project Foundation & Raw Data Pipeline | NOT STARTED | — |
+| 1 | Project Foundation & Raw Data Pipeline | IN PROGRESS | phase/1-foundation |
 | 2 | Staging Layer | NOT STARTED | — |
 | 3 | Intermediate + Mart Layer | NOT STARTED | — |
 | 4 | CI Pipeline & dbt Docs | NOT STARTED | — |
@@ -18,27 +18,30 @@ Branch strategy: `stage` → `phase/<N>-<description>` → PR → merge
 
 ---
 
-## Phase 1: Project Foundation & Raw Data Pipeline — NOT STARTED
+## Phase 1: Project Foundation & Raw Data Pipeline — IN PROGRESS
 
-### What Must Be Done
-- [ ] `uv init datavault`, add all deps
-- [ ] Create full directory structure
-- [ ] `dbt init datavault_dbt --skip-profile-setup`
-- [ ] Create `profiles.yml` with dbt-duckdb config
-- [ ] Update `datavault_dbt/dbt_project.yml` (profile, materializations)
-- [ ] Create `datavault_dbt/packages.yml` with dbt-utils + dbt-expectations
-- [ ] Run `dbt deps`
-- [ ] Download taxi_zones.csv → `datavault_dbt/seeds/taxi_zones.csv`
-- [ ] Create `scripts/download_data.py`
-- [ ] Create `scripts/load_raw.py` (DuckDB view over Parquet glob)
-- [ ] Create `data/sample/yellow_tripdata_sample.parquet` (10k rows, committed)
-- [ ] Create `scripts/verify_raw.py` with assertions
-- [ ] Create `tests/test_phase1.py`
-- [ ] Run `dbt seed` → verify 265 rows
-- [ ] Run `dbt debug` → all checks pass
-- [ ] Run `pytest tests/test_phase1.py` → 5 passed
-- [ ] Run `python scripts/verify_raw.py` → ALL CHECKS PASSED
-- [ ] Update this file with results
+### Completed Steps
+- [x] `uv init datavault`, add all deps (dbt-core, dbt-duckdb, streamlit, plotly, pandas, pytest, httpx)
+- [x] Create directory structure: `scripts/`, `dashboard/`, `tests/`, `data/raw/`, `data/sample/`
+- [x] `dbt init datavault_dbt --skip-profile-setup`
+- [x] Remove dbt example models, create `models/staging/`, `models/intermediate/`, `models/marts/`
+- [x] Create `profiles.yml` with dbt-duckdb config (reads `DUCKDB_PATH` env var, defaults to `datavault.duckdb`)
+- [x] Update `datavault_dbt/dbt_project.yml` (profile=datavault, staging=view, intermediate=view, marts=table)
+- [x] Create `datavault_dbt/packages.yml` with dbt-utils + dbt-expectations
+- [x] Run `dbt deps` → dbt_utils, dbt_expectations, dbt_date installed
+
+### What Must Be Done Next
+- [ ] Place raw CSV: `data/raw/transjakarta.csv` (download from Kaggle, commit to repo)
+- [ ] Create `scripts/generate_seeds.py` → extract stops.csv + corridors.csv → commit seeds
+- [ ] Create `scripts/load_raw.py` (DuckDB view over transjakarta CSV)
+- [ ] Create `scripts/verify_raw.py` with column + row assertions
+- [ ] Create `tests/test_phase1.py` (7 tests)
+- [ ] Run `dbt seed --project-dir datavault_dbt --profiles-dir .` → verify stops + corridors rows
+- [ ] Run `dbt debug --project-dir datavault_dbt --profiles-dir .` → All checks passed
+- [ ] Run `uv run pytest tests/test_phase1.py -v` → 7 passed
+- [ ] Run `uv run python scripts/verify_raw.py` → ALL CHECKS PASSED
+- [ ] Run tests second time to confirm deterministic
+- [ ] Commit progress.md update
 - [ ] End session, wait for verification
 
 ---
