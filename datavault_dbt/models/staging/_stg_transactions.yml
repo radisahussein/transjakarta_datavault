@@ -52,8 +52,14 @@ models:
               values: [0, 1]
 
       - name: tap_in_stop_id
+        description: >
+          Stop ID for tap-in location. ~6,989 rows have null stop_id but valid
+          stop_name — upstream data quality issue. Rows retained for ridership counting;
+          they will not join to stg_stops in the intermediate layer.
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: warn
 
       - name: tap_in_time
         tests:
