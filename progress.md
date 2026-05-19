@@ -13,7 +13,7 @@ Branch strategy: `stage` → `phase/<N>-<description>` → PR → merge
 | 1 | Project Foundation & Raw Data Pipeline | DONE | phase/1-foundation |
 | 2 | Staging Layer | DONE | phase/2-staging |
 | 3 | Intermediate + Mart Layer | DONE | phase/3-marts |
-| 4 | CI Pipeline & dbt Docs | NOT STARTED | — |
+| 4 | CI Pipeline & dbt Docs | DONE | phase/4-ci |
 | 5 | Dashboard + Deploy | NOT STARTED | — |
 
 ---
@@ -107,13 +107,26 @@ pytest test_phase3.py: 21 passed in 1.42s (run twice, deterministic)
 
 ---
 
-## Phase 4: CI Pipeline & dbt Docs — NOT STARTED
+## Phase 4: CI Pipeline & dbt Docs — DONE
 
-### What Must Be Done
-- [ ] GitHub Actions workflow: `.github/workflows/ci.yml` — on push, run `dbt build` + `pytest`
-- [ ] `dbt docs generate` + serve config
-- [ ] Update progress.md
-- [ ] End session, wait for verification
+**Completed:** 2026-05-19
+
+### What Was Done
+
+- `.github/workflows/ci.yml` — triggers on every push + PRs to main/stage; steps: checkout → Python 3.11 → uv → `uv sync` → `load_raw.py` → `dbt deps` → `dbt build` → `pytest tests/ -v`
+- `.github/workflows/docs.yml` — triggers on push to main; generates `dbt docs` artifacts (manifest.json, catalog.json, index.html) and deploys to GitHub Pages via `actions/deploy-pages`
+- `dbt docs generate` verified locally — catalog.json + index.html produced cleanly
+- Full suite re-verified on phase/4 branch: PASS=71 WARN=1 ERROR=0, 41 pytest passed (run twice, deterministic)
+
+### Test Results
+```
+dbt build:  PASS=71 WARN=1 ERROR=0 SKIP=0 TOTAL=72 (run twice, deterministic)
+pytest:     41 passed in 3.45s (all phases — run twice, deterministic)
+```
+
+### Commits
+- `ci: add GitHub Actions CI workflow — dbt build + pytest on push/PR`
+- `ci: add GitHub Actions docs workflow — dbt docs → GitHub Pages on main push`
 
 ---
 
