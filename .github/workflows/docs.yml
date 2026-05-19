@@ -1,0 +1,66 @@
+name: dbt Docs
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Load raw data into DuckDB
+        run: uv run python scripts/load_raw.py
+
+      - name: dbt deps
+        run: uv run dbt deps --project-dir datavault_dbt --profiles-dir .
+
+      - name: dbt build (needed for docs)
+        run: uv run dbt build --project-dir datavault_dbt --profiles-dir .
+
+      - name: dbt docs generate
+        run: uv run dbt docs generate --project-dir datavault_dbt --profiles-dir .
+
+      - name: Move docs to gh-pages dir
+        run: |
+          mkdir -p gh-pages
+          cp datavault_dbt/target/manifest.json gh-pages/
+          cp datavault_dbt/target/catalog.json gh-pages/
+          cp datavault_dbt/target/index.html gh-pages/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: gh-pages
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
