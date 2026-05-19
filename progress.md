@@ -14,7 +14,7 @@ Branch strategy: `stage` → `phase/<N>-<description>` → PR → merge
 | 2 | Staging Layer | DONE | phase/2-staging |
 | 3 | Intermediate + Mart Layer | DONE | phase/3-marts |
 | 4 | CI Pipeline & dbt Docs | DONE | phase/4-ci |
-| 5 | Dashboard + Deploy | NOT STARTED | — |
+| 5 | Dashboard + Deploy | DONE | phase/5-dashboard |
 
 ---
 
@@ -130,10 +130,35 @@ pytest:     41 passed in 3.45s (all phases — run twice, deterministic)
 
 ---
 
-## Phase 5: Dashboard + Deploy — NOT STARTED
+## Phase 5: Dashboard + Deploy — DONE
 
-### What Must Be Done
-- [ ] Streamlit dashboard: `app/dashboard.py` — reads DuckDB mart tables, shows KPIs + charts
-- [ ] Deploy plan (Streamlit Cloud or Docker)
-- [ ] Update progress.md
-- [ ] End session
+**Completed:** 2026-05-19
+
+### What Was Done
+
+- `dashboard/app.py` — Streamlit dashboard with 4 tabs:
+  - **Daily Ridership**: area chart of daily trips, top-10 corridor bar, completion rate histogram
+  - **Corridors**: scatter (distance vs duration, bubble = volume), revenue bar, full stats table
+  - **Stop Performance**: geo scatter map (lat/lon, bubble = boardings, color = score), top-20 table, score histogram
+  - **Surge Analysis**: corridor selector → demand heatmap (day × hour), peak slots table, hourly bar
+  - KPI header: total trips (182,520), total revenue (Rp 478.1M), active corridors (221), unique riders
+  - Cold-start bootstrap: if `datavault.duckdb` absent, runs `load_raw.py` → `dbt deps` → `dbt build` automatically
+- `requirements.txt` — pinned deps for Streamlit Cloud: dbt-core, dbt-duckdb, duckdb, pandas, plotly, streamlit
+- `.streamlit/config.toml` — theme config + headless server for cloud deploy
+
+**Deploy to Streamlit Cloud:**
+1. Push repo to GitHub (public or private with access)
+2. Go to share.streamlit.io → New app
+3. Repo: this repo, Branch: `main`, Main file: `dashboard/app.py`
+4. On first load: cold-start bootstrap runs (~30s), then dashboard is live
+
+### Test Results
+```
+dbt build:  PASS=71 WARN=1 ERROR=0 SKIP=0 TOTAL=72 (run twice, deterministic)
+pytest:     41 passed in 3.13s (all phases — run twice, deterministic)
+Dashboard:  HTTP 200 on localhost:8501, all 4 data queries validated
+```
+
+### Commits
+- `feat: add Streamlit dashboard with 4 tabs — ridership, corridors, stop performance, surge heatmap`
+- `chore: add requirements.txt and Streamlit config for cloud deploy`
