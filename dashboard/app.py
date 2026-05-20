@@ -8,28 +8,43 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-DB_PATH = os.environ.get("DUCKDB_PATH", "datavault.duckdb")
 REPO_ROOT = Path(__file__).parent.parent
+DB_PATH = os.environ.get("DUCKDB_PATH", str(REPO_ROOT / "datavault.duckdb"))
+_DBT = [sys.executable, "-m", "dbt"]
+
+
+def _marts_ready() -> bool:
+    """True only if DB exists AND mart tables are present."""
+    if not Path(DB_PATH).exists():
+        return False
+    try:
+        con = duckdb.connect(DB_PATH, read_only=True)
+        con.execute("SELECT 1 FROM main_marts.mart_daily_ridership LIMIT 1")
+        con.close()
+        return True
+    except Exception:
+        return False
 
 
 def _build_db():
-    """Run load_raw + dbt build if DuckDB file is absent (e.g. fresh Streamlit Cloud deploy)."""
+    """Run load_raw + dbt build. Uses sys.executable to stay in the active venv."""
+    env = {**os.environ, "DUCKDB_PATH": DB_PATH}
     subprocess.run(
         [sys.executable, str(REPO_ROOT / "scripts" / "load_raw.py")],
-        cwd=REPO_ROOT, check=True,
+        cwd=REPO_ROOT, check=True, env=env,
     )
     subprocess.run(
-        ["dbt", "deps", "--project-dir", "datavault_dbt", "--profiles-dir", "."],
-        cwd=REPO_ROOT, check=True,
+        _DBT + ["deps", "--project-dir", "datavault_dbt", "--profiles-dir", "."],
+        cwd=REPO_ROOT, check=True, env=env,
     )
     subprocess.run(
-        ["dbt", "build", "--project-dir", "datavault_dbt", "--profiles-dir", "."],
-        cwd=REPO_ROOT, check=True,
+        _DBT + ["build", "--project-dir", "datavault_dbt", "--profiles-dir", "."],
+        cwd=REPO_ROOT, check=True, env=env,
     )
 
 
-if not Path(DB_PATH).exists():
-    with st.spinner("First run — building data pipeline (≈ 30 s)…"):
+if not _marts_ready():
+    with st.spinner("First run — building data pipeline (≈ 60 s)…"):
         _build_db()
 DAY_LABELS = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun"}
 
